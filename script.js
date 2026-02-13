@@ -174,7 +174,7 @@ function setupProposalPopup() {
         const popupRect = popupCard.getBoundingClientRect();
         
         // Position below Yes button (which is inside the popup card)
-        const buttonBelowYesTop = yesRect.bottom + 20; // 20px below Yes button
+        const buttonBelowYesTop = yesRect.bottom + 20;
         const centerX = popupRect.left + popupRect.width/2;
         
         // Set initial position
@@ -193,7 +193,6 @@ function setupProposalPopup() {
         const buttonWidth = noBtn.offsetWidth;
         const buttonHeight = noBtn.offsetHeight;
         
-        // Calculate safe boundaries on entire screen
         const minX = 20;
         const maxX = screenWidth - buttonWidth - 20;
         const minY = 20;
@@ -202,7 +201,6 @@ function setupProposalPopup() {
         let randomX, randomY;
         
         if (farAway) {
-            // Move to opposite side of screen from current position
             const currentX = parseInt(noBtn.style.left) || screenWidth/2;
             randomX = currentX > screenWidth/2 ? 
                 Math.random() * (screenWidth/3) : 
@@ -213,16 +211,13 @@ function setupProposalPopup() {
                 Math.random() * (screenHeight/3) : 
                 screenHeight/2 + Math.random() * (screenHeight/3);
         } else {
-            // Random position anywhere on screen
             randomX = Math.random() * (maxX - minX) + minX;
             randomY = Math.random() * (maxY - minY) + minY;
         }
         
-        // Ensure within bounds
         randomX = Math.max(minX, Math.min(randomX, maxX));
         randomY = Math.max(minY, Math.min(randomY, maxY));
         
-        // Ensure not too close to Yes button
         const yesRect = yesBtn.getBoundingClientRect();
         let attempts = 0;
         while (attempts < 10) {
@@ -238,16 +233,13 @@ function setupProposalPopup() {
             attempts++;
         }
         
-        // Apply teleport animation
         noBtn.classList.add('escaping');
         
-        // Set new position
         setTimeout(() => {
             noBtn.style.left = `${randomX}px`;
             noBtn.style.top = `${randomY}px`;
-            noBtn.style.transform = 'translateX(0)'; // Remove center alignment
+            noBtn.style.transform = 'translateX(0)';
             
-            // Remove animation class
             setTimeout(() => {
                 noBtn.classList.remove('escaping');
             }, 400);
@@ -257,25 +249,20 @@ function setupProposalPopup() {
     function showNoButtonMessage() {
         const randomMessage = hoverMessages[Math.floor(Math.random() * hoverMessages.length)];
         
-        // Remove any existing message bubble
         const existingBubble = document.querySelector('.no-message-bubble');
         if (existingBubble) {
             existingBubble.remove();
         }
         
-        // Create new message bubble
         const messageBubble = document.createElement('div');
         messageBubble.className = 'no-message-bubble';
         messageBubble.textContent = randomMessage;
         
-        // Position near the No button
         const buttonRect = noBtn.getBoundingClientRect();
         
-        // Position bubble above the button
         let bubbleTop = buttonRect.top - 50;
         let bubbleLeft = buttonRect.left + buttonRect.width/2;
         
-        // Ensure bubble stays within viewport
         if (bubbleTop < 20) bubbleTop = buttonRect.bottom + 20;
         if (bubbleLeft < 100) bubbleLeft = 100;
         if (bubbleLeft > window.innerWidth - 100) bubbleLeft = window.innerWidth - 100;
@@ -286,7 +273,6 @@ function setupProposalPopup() {
         
         document.body.appendChild(messageBubble);
         
-        // Remove bubble after animation
         setTimeout(() => {
             if (messageBubble.parentNode) {
                 messageBubble.remove();
@@ -305,7 +291,6 @@ function setupProposalPopup() {
     }
     
     function triggerWelcomeCelebration() {
-        // Change header text temporarily
         const header = document.querySelector('.header h1');
         const originalText = header.innerHTML;
         
@@ -314,7 +299,6 @@ function setupProposalPopup() {
         header.style.transform = 'scale(1.1)';
         header.style.transition = 'all 0.5s ease';
         
-        // More celebration confetti
         setTimeout(() => {
             confetti({
                 particleCount: 300,
@@ -324,7 +308,6 @@ function setupProposalPopup() {
             });
         }, 500);
         
-        // Return to original after 3 seconds
         setTimeout(() => {
             header.innerHTML = originalText;
             header.style.color = '#ff4081';
@@ -420,27 +403,33 @@ function createFloatingHearts() {
 }
 
 function initializeApp() {
-    // Set initial quote
     updateQuoteDisplay();
-    
-    // Set initial question
     updateQuestionDisplay();
     
-    // Update days counter
     const daysCount = document.getElementById('daysCount');
     if (daysCount) daysCount.textContent = appData.daysTogether;
     
-    // Initialize music
     const music = document.getElementById('bgMusic');
     if (music) music.volume = 0.3;
 }
 
+// FIXED: Event Listeners with proper function references
 function setupEventListeners() {
-    // Quote buttons
-    const prevQuote = document.getElementById('prevQuote');
-    const nextQuote = document.getElementById('nextQuote');
-    if (prevQuote) prevQuote.addEventListener('click', prevQuote);
-    if (nextQuote) nextQuote.addEventListener('click', nextQuote);
+    // Quote buttons - FIXED: Use anonymous functions to call the actual functions
+    const prevQuoteBtn = document.getElementById('prevQuote');
+    const nextQuoteBtn = document.getElementById('nextQuote');
+    
+    if (prevQuoteBtn) {
+        prevQuoteBtn.addEventListener('click', function() {
+            goToPreviousQuote();
+        });
+    }
+    
+    if (nextQuoteBtn) {
+        nextQuoteBtn.addEventListener('click', function() {
+            goToNextQuote();
+        });
+    }
     
     // Question button
     const newQuestion = document.getElementById('newQuestion');
@@ -461,8 +450,20 @@ function setupEventListeners() {
     if (musicBtn) musicBtn.addEventListener('click', toggleMusic);
 }
 
+// FIXED: Renamed functions to avoid conflict with button IDs
+function goToPreviousQuote() {
+    appData.currentQuoteIndex = 
+        (appData.currentQuoteIndex - 1 + romanticQuotes.length) % romanticQuotes.length;
+    updateQuoteDisplay();
+}
+
+function goToNextQuote() {
+    appData.currentQuoteIndex = 
+        (appData.currentQuoteIndex + 1) % romanticQuotes.length;
+    updateQuoteDisplay();
+}
+
 function startAnimations() {
-    // Add animation to sections on scroll
     const sections = document.querySelectorAll('.section');
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -486,18 +487,6 @@ function updateQuoteDisplay() {
     if (currentQuote) {
         currentQuote.textContent = romanticQuotes[appData.currentQuoteIndex];
     }
-}
-
-function prevQuote() {
-    appData.currentQuoteIndex = 
-        (appData.currentQuoteIndex - 1 + romanticQuotes.length) % romanticQuotes.length;
-    updateQuoteDisplay();
-}
-
-function nextQuote() {
-    appData.currentQuoteIndex = 
-        (appData.currentQuoteIndex + 1) % romanticQuotes.length;
-    updateQuoteDisplay();
 }
 
 function updateQuestionDisplay() {
@@ -530,12 +519,10 @@ function handleAnswer(event) {
     const points = parseInt(event.target.dataset.points);
     appData.points += points;
     
-    // Visual feedback
     event.target.style.background = '#ff4081';
     event.target.style.color = 'white';
     event.target.style.transform = 'scale(0.95)';
     
-    // Add points animation
     const pointsPopup = document.createElement('div');
     pointsPopup.textContent = `+${points} 💖`;
     pointsPopup.style.position = 'absolute';
@@ -552,10 +539,8 @@ function handleAnswer(event) {
         pointsPopup.remove();
     }, 1000);
     
-    // Increase love percentage
     appData.lovePercentage += 5;
     
-    // Check for special achievement
     if (appData.points >= 100) {
         triggerAchievement("Love Master! 🏆");
     }
@@ -570,11 +555,9 @@ function showMessage(event) {
         display.innerHTML = `<div class="message-reveal">${message}</div>`;
     }
     
-    // Change button to unlocked
     event.target.innerHTML = `<i class="fas fa-lock-open"></i> Message #${messageNum}`;
     event.target.style.background = 'linear-gradient(45deg, #4CAF50, #8BC34A)';
     
-    // Heart animation
     const hearts = ['💖', '💝', '💗', '💓', '💞'];
     for (let i = 0; i < 10; i++) {
         setTimeout(() => {
@@ -651,7 +634,6 @@ document.addEventListener('keydown', (e) => {
         triggerAchievement("You found the secret! 🎮 I love you even more! 💖");
         konamiCode = [];
         
-        // Mega confetti!
         for(let i = 0; i < 5; i++) {
             setTimeout(() => {
                 confetti({
@@ -671,7 +653,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// ===== IMAGE SLIDER FUNCTIONALITY - FIXED VERSION =====
+// ===== IMAGE SLIDER FUNCTIONALITY =====
 function setupImageSlider() {
     console.log("Setting up image slider...");
     
@@ -682,7 +664,6 @@ function setupImageSlider() {
     const addImageBtn = document.getElementById('addImageBtn');
     const sliderDots = document.getElementById('sliderDots');
     
-    // Check if slider exists
     if (!slider) {
         console.error("Slider element not found!");
         return;
@@ -692,19 +673,18 @@ function setupImageSlider() {
     let autoPlayInterval = null;
     let isAutoPlaying = false;
     
-    // Your images from 'image' folder (singular)
+    // FIXED: Complete array with all 32 images
     const localImages = [
         'image/1.jpg', 'image/2.jpg', 'image/3.jpg', 'image/4.jpg',
         'image/5.jpg', 'image/6.jpg', 'image/7.jpg', 'image/8.jpg',
         'image/9.jpg', 'image/10.jpg', 'image/11.jpg', 'image/12.jpg',
         'image/13.jpg', 'image/14.jpg', 'image/15.jpg', 'image/16.jpg',
-        'image/17.jpg', 'image/19.jpg', 'image/20.jpg',
-         'image/24.jpg',
+        'image/17.jpg', 'image/18.jpg', 'image/19.jpg', 'image/20.jpg',
+        'image/21.jpg', 'image/22.jpg', 'image/23.jpg', 'image/24.jpg',
         'image/25.jpg', 'image/26.jpg', 'image/27.jpg', 'image/28.jpg',
         'image/29.jpg', 'image/30.jpg', 'image/31.jpg', 'image/32.jpg'
     ];
     
-    // Default fallback images if local images don't load
     const fallbackImages = [
         'https://images.unsplash.com/photo-1518568814500-bf0f8d125f46?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
         'https://images.unsplash.com/photo-1529254479751-fbacb4c7a587?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
@@ -712,16 +692,11 @@ function setupImageSlider() {
         'https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
     ];
     
-    // Load images function
     function loadImages() {
-        console.log("Loading images from 'image' folder...");
-        
-        // Clear existing content
         while (slider.firstChild) {
             slider.removeChild(slider.firstChild);
         }
         
-        // Add all images
         localImages.forEach((imageSrc, index) => {
             const sliderItem = document.createElement('div');
             sliderItem.className = 'slider-item';
@@ -731,16 +706,10 @@ function setupImageSlider() {
             img.alt = `Memory ${index + 1}`;
             img.loading = 'lazy';
             
-            // Error handling
             img.onerror = function() {
                 console.log(`Failed to load: ${imageSrc}`);
                 this.src = fallbackImages[index % fallbackImages.length];
-                this.onerror = null; // Prevent infinite loop
-            };
-            
-            // Log successful loads
-            img.onload = function() {
-                console.log(`Successfully loaded: ${imageSrc}`);
+                this.onerror = null;
             };
             
             sliderItem.appendChild(img);
@@ -750,7 +719,6 @@ function setupImageSlider() {
         console.log(`Loaded ${slider.children.length} images`);
     }
     
-    // Update slider position
     function updateSlider() {
         if (slider.children.length > 0) {
             slider.style.transform = `translateX(-${currentSlide * 100}%)`;
@@ -758,7 +726,6 @@ function setupImageSlider() {
         }
     }
     
-    // Create navigation dots
     function createDots() {
         if (!sliderDots) return;
         
@@ -776,7 +743,6 @@ function setupImageSlider() {
         }
     }
     
-    // Update dots
     function updateDots() {
         if (!sliderDots) return;
         
@@ -786,7 +752,6 @@ function setupImageSlider() {
         });
     }
     
-    // Toggle auto-play
     function toggleAutoPlay() {
         if (isAutoPlaying) {
             stopAutoPlay();
@@ -798,7 +763,6 @@ function setupImageSlider() {
         isAutoPlaying = !isAutoPlaying;
     }
     
-    // Start auto-play
     function startAutoPlay() {
         stopAutoPlay();
         autoPlayInterval = setInterval(() => {
@@ -809,7 +773,6 @@ function setupImageSlider() {
         }, 3000);
     }
     
-    // Stop auto-play
     function stopAutoPlay() {
         if (autoPlayInterval) {
             clearInterval(autoPlayInterval);
@@ -817,7 +780,6 @@ function setupImageSlider() {
         }
     }
     
-    // Reset auto-play
     function resetAutoPlay() {
         if (isAutoPlaying) {
             stopAutoPlay();
@@ -825,17 +787,14 @@ function setupImageSlider() {
         }
     }
     
-    // Initialize slider
     loadImages();
     
-    // Create dots after images are loaded
     setTimeout(() => {
         if (slider.children.length > 0) {
             createDots();
         }
     }, 100);
     
-    // Set up event listeners
     if (prevBtn) {
         prevBtn.addEventListener('click', () => {
             if (slider.children.length > 0) {
@@ -866,7 +825,6 @@ function setupImageSlider() {
         });
     }
     
-    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft') {
             if (slider.children.length > 0) {
@@ -883,7 +841,6 @@ function setupImageSlider() {
         }
     });
     
-    // Start auto-play after 5 seconds
     setTimeout(() => {
         if (slider.children.length > 1 && autoPlayBtn) {
             startAutoPlay();
@@ -891,34 +848,23 @@ function setupImageSlider() {
             autoPlayBtn.innerHTML = '<i class="fas fa-pause"></i> Pause';
         }
     }, 5000);
-    
-    console.log("Image slider setup complete!");
 }
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM loaded, initializing app...");
     
-    // First, set up the proposal popup
     if (document.getElementById('proposalPopup')) {
         setupProposalPopup();
     }
     
-    // Then create floating hearts
     if (document.querySelector('.hearts-container')) {
         createFloatingHearts();
     }
     
-    // Initialize counters and states
     initializeApp();
-    
-    // Set up event listeners
     setupEventListeners();
-    
-    // Start animations
     startAnimations();
-
-    // Setup image slider
     setupImageSlider();
     
     console.log("App initialization complete!");
